@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统配置 - 智能试卷生成系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>系统配置管理</h1>
+            <p>配置邮件服务和API密钥</p>
+            <div style="margin-top: 20px;">
+                <a href="{{ url_for('index') }}" class="btn" style="background: #3498db;">返回首页</a>
+                <a href="{{ url_for('student_portal') }}" class="btn" style="background: #9b59b6;">学生门户</a>
+            </div>
+        </header>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <form method="post" class="input-form">
+            <div class="form-group">
+                <h3>邮件服务器配置</h3>
+                
+                <div class="controls-grid">
+                    <div class="control-item">
+                        <label for="mail_server">邮件服务器：</label>
+                        <input type="text" id="mail_server" name="mail_server" value="{{ config.get('mail_server', 'smtp.gmail.com') }}" required>
+                    </div>
+                    <div class="control-item">
+                        <label for="mail_port">端口：</label>
+                        <input type="number" id="mail_port" name="mail_port" value="{{ config.get('mail_port', '587') }}" required>
+                    </div>
+                </div>
+                
+                <div class="controls-grid">
+                    <div class="control-item">
+                        <label for="mail_username">邮箱用户名：</label>
+                        <input type="email" id="mail_username" name="mail_username" value="{{ config.get('mail_username', '') }}" required>
+                    </div>
+                    <div class="control-item">
+                        <label for="mail_password">邮箱密码/应用密码：</label>
+                        <input type="password" id="mail_password" name="mail_password" value="{{ config.get('mail_password', '') }}" required>
+                    </div>
+                </div>
+                
+                <div class="control-item">
+                    <label for="mail_default_sender">发件人邮箱：</label>
+                    <input type="email" id="mail_default_sender" name="mail_default_sender" value="{{ config.get('mail_default_sender', '') }}" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <h3>API配置</h3>
+                
+                <div class="control-item">
+                    <label for="deepseek_api_key">DeepSeek API密钥：</label>
+                    <input type="password" id="deepseek_api_key" name="deepseek_api_key" value="{{ config.get('deepseek_api_key', '') }}" required>
+                    <p class="hint">请从DeepSeek官网获取API密钥</p>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <h3>系统配置</h3>
+                
+                <div class="control-item">
+                    <label for="daily_practice_time">每日练习发送时间：</label>
+                    <select id="daily_practice_time" name="daily_practice_time">
+                        <option value="06:00" {% if config.get('daily_practice_time', '07:00') == '06:00' %}selected{% endif %}>早上6点</option>
+                        <option value="07:00" {% if config.get('daily_practice_time', '07:00') == '07:00' %}selected{% endif %}>早上7点</option>
+                        <option value="08:00" {% if config.get('daily_practice_time', '07:00') == '08:00' %}selected{% endif %}>早上8点</option>
+                        <option value="18:00" {% if config.get('daily_practice_time', '07:00') == '18:00' %}selected{% endif %}>晚上6点</option>
+                        <option value="19:00" {% if config.get('daily_practice_time', '07:00') == '19:00' %}selected{% endif %}>晚上7点</option>
+                        <option value="20:00" {% if config.get('daily_practice_time', '07:00') == '20:00' %}selected{% endif %}>晚上8点</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn generate-btn">保存配置</button>
+        </form>
+        
+        <div class="exam-result">
+            <h2>配置说明</h2>
+            <div class="exam-content">
+                <h3>邮件服务器配置</h3>
+                <ul>
+                    <li><strong>Gmail用户：</strong>使用smtp.gmail.com，端口587，需要开启两步验证并使用应用专用密码</li>
+                    <li><strong>QQ邮箱：</strong>使用smtp.qq.com，端口587或465</li>
+                    <li><strong>163邮箱：</strong>使用smtp.163.com，端口25或465</li>
+                </ul>
+                
+                <h3>API密钥获取</h3>
+                <p>访问DeepSeek官网注册账号并获取API密钥：https://platform.deepseek.com/</p>
+                
+                <h3>注意事项</h3>
+                <ul>
+                    <li>保存配置后需要重启应用才能生效</li>
+                    <li>请确保邮箱服务器支持SMTP协议</li>
+                    <li>建议使用专用邮箱账号发送练习邮件</li>
+                    <li>定期检查API密钥的有效性</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
