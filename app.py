@@ -1,5 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import os
 import re
+import sys
+import locale
 from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify
 from openai import OpenAI
 from docx import Document
@@ -18,6 +22,24 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import threading
 import time
 import configparser
+
+# 设置系统编码为UTF-8
+if sys.platform.startswith('win'):
+    # Windows系统设置UTF-8编码
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8')
+
+# 设置默认编码
+try:
+    locale.setlocale(locale.LC_ALL, 'zh_CN.UTF-8')
+except locale.Error:
+    try:
+        locale.setlocale(locale.LC_ALL, 'Chinese_China.UTF-8')
+    except locale.Error:
+        pass
 
 # 加载环境变量
 load_dotenv()
@@ -69,9 +91,18 @@ client = OpenAI(
     base_url="https://api.deepseek.com"
 )
 
-# 数据库初始化
+# 数据库初始化（改进UTF-8支持）
 def init_db():
-    conn = sqlite3.connect('students.db')
+    """初始化数据库，确保UTF-8编码支持"""
+    # 创建数据库连接，确保UTF-8编码
+    conn = sqlite3.connect('students.db', 
+                          detect_types=sqlite3.PARSE_DECLTYPES,
+                          check_same_thread=False)
+    
+    # 设置数据库连接的编码
+    conn.execute("PRAGMA encoding = 'UTF-8'")
+    conn.execute("PRAGMA foreign_keys = ON")
+    
     c = conn.cursor()
     
     # 学生订阅表（添加详细信息字段）
@@ -103,6 +134,16 @@ def init_db():
     
     conn.commit()
     conn.close()
+
+# 改进的数据库连接函数
+def get_db_connection():
+    """获取数据库连接，确保UTF-8支持"""
+    conn = sqlite3.connect('students.db', 
+                          detect_types=sqlite3.PARSE_DECLTYPES,
+                          check_same_thread=False)
+    conn.execute("PRAGMA encoding = 'UTF-8'")
+    conn.row_factory = sqlite3.Row
+    return conn
 
 # 初始化数据库
 init_db()
@@ -161,8 +202,7 @@ def generate_daily_practice(subject, difficulty, question_count=5, grade=None, k
     {f'学生年级：{grade}年级，请根据该年级的认知水平出题。' if grade else ''}
     {f'重点知识范围：{knowledge_scope}' if knowledge_scope else ''}
     {f'学习目标：{learning_goals}' if learning_goals else ''}
-    
-    题目应该：
+题目应该：
     1. 覆盖该科目的重点知识点
     2. 难度适中，适合学生日常练习
     3. 包含详细的解析和学习建议
@@ -218,7 +258,7 @@ def send_daily_practice_email():
                     {f'<p><strong>学习目标：</strong>{learning_goals}</p>' if learning_goals else ''}
                     <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px;">
                         {practice_html}
-                    </div>
+</div>
                     <p style="color: #666; font-size: 12px; margin-top: 20px;">
                         此邮件由智能试卷生成系统自动发送，如需取消订阅请访问系统设置。
                     </p>
@@ -430,17 +470,29 @@ def index():
         question_types = request.form.get('question_types', '')
         instructions = request.form.get('instructions', '')
         
-        # 处理资料内容
+        # 处理资料内容（改进UTF-8编码处理）
         material = ""
         if material_file and material_file.filename != '':
             try:
                 if material_file.filename.endswith('.txt') or material_file.filename.endswith('.md'):
-                    material = material_file.read().decode('utf-8')
+                    # 尝试多种编码格式读取文件
+                    file_content = material_file.read()
+                    encodings = ['utf-8', 'gbk', 'gb2312', 'latin1']
+                    
+                    for encoding in encodings:
+                        try:
+                            material = file_content.decode(encoding)
+                            break
+                        except UnicodeDecodeError:
+                            continue
+                    else:
+                        # 如果所有编码都失败，使用utf-8并忽略错误
+                        material = file_content.decode('utf-8', errors='ignore')
                 else:
                     flash("目前仅支持TXT和MD格式文件")
                     return redirect(url_for('index'))
-            except UnicodeDecodeError:
-                flash("无法解析文件，请确保上传的是UTF-8编码的文本文件")
+            except Exception as e:
+                flash(f"文件读取失败: {str(e)}")
                 return redirect(url_for('index'))
         
         # 如果没有上传文件，使用文本框内容
@@ -471,11 +523,13 @@ def index():
         # 转换为HTML
         exam_html = markdown.markdown(exam_content)
         
-        # 保存内容到临时文件
+        # 保存内容到临时文件（确保UTF-8编码）
         temp_dir = tempfile.gettempdir()
         file_id = str(uuid.uuid4())
         md_path = os.path.join(temp_dir, f"{file_id}.md")
-        with open(md_path, 'w', encoding='utf-8') as f:
+        
+        # 使用UTF-8编码保存文件，并添加BOM以支持Windows系统
+        with open(md_path, 'w', encoding='utf-8-sig') as f:
             f.write(exam_content)
         
         return render_template('index.html', 
@@ -500,7 +554,7 @@ def student_portal():
         preferred_time = request.form.get('preferred_time', '07:00')
         action = request.form.get('action')
         
-        conn = sqlite3.connect('students.db')
+        conn = get_db_connection()
         c = conn.cursor()
         
         if action == 'subscribe':
@@ -536,6 +590,9 @@ def student_portal():
                     recipients=[email],
                     html=f"""
                     <html>
+                    <head>
+                        <meta charset="UTF-8">
+                    </head>
                     <body>
                         <h2>测试练习题</h2>
                         {f'<p><strong>年级：</strong>{grade}年级</p>' if grade else ''}
@@ -609,6 +666,7 @@ def download(file_type, file_id):
         flash("文件不存在或已过期")
         return redirect(url_for('index'))
     
+    # 使用UTF-8编码读取文件
     with open(md_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
@@ -617,19 +675,33 @@ def download(file_type, file_id):
         return send_file(
             buffer,
             as_attachment=True,
-            download_name=f'exam_paper_{datetime.now().strftime("%Y%m%d_%H%M")}.docx',
+            download_name=f'exam_paper_{datetime.now().strftime("%Y年%m月%d日")}.docx',
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
     elif file_type == 'html':
         html_content = markdown.markdown(content)
         buffer = StringIO()
-        buffer.write(html_content)
+        buffer.write(f'''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>试卷 - {datetime.now().strftime("%Y年%m月%d日")}</title>
+    <style>
+        body {{ font-family: "Microsoft YaHei", "SimHei", sans-serif; line-height: 1.6; }}
+        h1, h2, h3 {{ color: #2c3e50; }}
+    </style>
+</head>
+<body>
+    {html_content}
+</body>
+</html>''')
         buffer.seek(0)
         return send_file(
             buffer,
             as_attachment=True,
             download_name=f'exam_paper_{datetime.now().strftime("%Y%m%d_%H%M")}.html',
-            mimetype='text/html'
+            mimetype='text/html; charset=utf-8'
         )
     elif file_type == 'pdf':
         buffer = convert_markdown_to_pdf(content)

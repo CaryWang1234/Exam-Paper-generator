@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>智能试卷生成系统 - 专业版</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -47,15 +48,15 @@
             {% endif %}
         {% endwith %}
         
-        <form method="post" enctype="multipart/form-data" class="input-form" id="examForm">
+        <form method="post" enctype="multipart/form-data" class="input-form" id="examForm" accept-charset="UTF-8">
             <!-- 资料输入部分 -->
             <div class="form-group">
                 <h3>资料输入</h3>
                 <label for="material">上传资料文件：</label>
                 <input type="file" id="material" name="material" accept=".txt,.md,.docx,.pdf">
-                <p class="hint">支持格式：TXT、MD、DOCX、PDF</p>
+                <p class="hint">支持格式：TXT、MD、DOCX、PDF（推荐使用UTF-8编码）</p>
                 <p class="hint">或直接输入资料内容：</p>
-                <textarea id="material_text" name="material_text" rows="8" placeholder="在这里输入资料内容..."></textarea>
+                <textarea id="material_text" name="material_text" rows="8" placeholder="在这里输入资料内容..." style="font-family: 'Microsoft YaHei', sans-serif;"></textarea>
             </div>
             
             <!-- 试卷配置部分 -->
@@ -93,14 +94,14 @@
                 </div>
                 
                 <label for="question_types">题目类型配置：</label>
-                <textarea id="question_types" name="question_types" rows="3" placeholder="例如：选择题10道，填空题5道，简答题3道...（留空将自动分配）"></textarea>
+                <textarea id="question_types" name="question_types" rows="3" placeholder="例如：选择题10道，填空题5道，简答题3道...（留空将自动分配）" style="font-family: 'Microsoft YaHei', sans-serif;"></textarea>
             </div>
             
             <!-- 高级选项部分 -->
             <div class="form-group">
                 <h3>高级选项</h3>
                 <label for="instructions">自定义指令：</label>
-                <textarea id="instructions" name="instructions" rows="4" placeholder="例如：重点考察第三章内容，增加应用题比例，避免重复题目..."></textarea>
+                <textarea id="instructions" name="instructions" rows="4" placeholder="例如：重点考察第三章内容，增加应用题比例，避免重复题目..." style="font-family: 'Microsoft YaHei', sans-serif;"></textarea>
                 <p class="hint">可指定具体的考察重点、题目风格等要求</p>
             </div>
             
@@ -133,7 +134,7 @@
                 <!-- 试卷预览 -->
                 <div class="preview-section">
                     <h4>试卷内容预览</h4>
-                    <div class="exam-content">
+                    <div class="exam-content" style="font-family: 'Microsoft YaHei', 'SimHei', sans-serif;">
                         {{ exam_content|safe }}
                     </div>
                 </div>
@@ -164,7 +165,7 @@
                     // 可以在这里添加文件内容预览功能
                     console.log('文件内容已加载');
                 };
-                reader.readAsText(file);
+                reader.readAsText(file, 'UTF-8');
             }
         });
     </script>
