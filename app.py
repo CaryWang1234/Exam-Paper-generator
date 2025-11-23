@@ -87,15 +87,17 @@ mail = Mail(app)
 # 初始化DeepSeek客户端
 deepseek_api_key = config.get('DEFAULT', 'deepseek_api_key', fallback='')
 # 从环境变量或配置中获取代理
-proxy = os.getenv("HTTP_PROXY")  # 或者你获取代理的方式
+# 假设你从配置中读取代理
+proxy = config['DEFAULT'].get('proxy')
 
+# 正确的初始化方式
 client_kwargs = {}
 if proxy:
     client_kwargs["proxies"] = proxy
 
 client = OpenAI(
-    api_key=deepseek_api_key,
-    **client_kwargs
+    api_key=config['DEFAULT']['deepseek_api_key'],
+    client_kwargs=client_kwargs  # 将代理参数放入 client_kwargs
 )
 
 # 数据库初始化（改进UTF-8支持）
