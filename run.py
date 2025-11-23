@@ -42,7 +42,7 @@ if __name__ == '__main__':
     from app import app
     
     print("=" * 50)
-    print("智能试卷生成系统 - UTF-8编码支持已启用")
+    print("智能试卷生成系统")
     print("系统编码:", sys.getdefaultencoding())
     print("文件系统编码:", sys.getfilesystemencoding())
     print("=" * 50)
