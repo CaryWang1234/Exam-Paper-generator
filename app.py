@@ -84,14 +84,18 @@ app.config['MAIL_DEFAULT_SENDER'] = config.get('DEFAULT', 'mail_default_sender',
 
 mail = Mail(app)
 
-# 初始化DeepSeek客户端
+# 1. 安全地获取 API 密钥，如果不存在则为空字符串
 deepseek_api_key = config.get('DEFAULT', 'deepseek_api_key', fallback='')
-# 从环境变量或配置中获取代理
-# 假设你从配置中读取代理
-client = OpenAI(
-    api_key=config['DEFAULT']['deepseek_api_key']
-)
 
+# 2. 检查 API 密钥是否为空，如果为空则抛出明确的错误
+if not deepseek_api_key:
+    raise ValueError("DeepSeek API key is not set in the config.ini file.")
+
+# 3. 使用获取到的变量来初始化 OpenAI 客户端
+#    同时，确保这里没有 'proxies' 参数
+client = OpenAI(
+    api_key=deepseek_api_key
+)
 # 数据库初始化（改进UTF-8支持）
 def init_db():
     """初始化数据库，确保UTF-8编码支持"""
