@@ -86,6 +86,7 @@ mail = Mail(app)
 
 # 1. 安全地获取 API 密钥，如果不存在则为空字符串
 deepseek_api_key = config.get('DEFAULT', 'deepseek_api_key', fallback='')
+deepseek_base_url = config.get('DEFAULT', 'deepseek_base_url', fallback='')
 
 # 2. 检查 API 密钥是否为空，如果为空则抛出明确的错误
 if not deepseek_api_key:
@@ -94,7 +95,8 @@ if not deepseek_api_key:
 # 3. 使用获取到的变量来初始化 OpenAI 客户端
 #    同时，确保这里没有 'proxies' 参数
 client = OpenAI(
-    api_key=deepseek_api_key
+    api_key=deepseek_api_key,
+    base_url=deepseek_base_url
 )
 # 数据库初始化（改进UTF-8支持）
 def init_db():
@@ -216,7 +218,7 @@ def generate_daily_practice(subject, difficulty, question_count=5, grade=None, k
     
     try:
         response = client.chat.completions.create(
-            model="deepseek-chat",
+            model="deepseek-v4-pro",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
@@ -361,7 +363,7 @@ def generate_exam(material, exam_type, difficulty, total_score, time_limit, ques
     
     try:
         response = client.chat.completions.create(
-            model="deepseek-chat",
+            model="deepseek-v4-pro",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
