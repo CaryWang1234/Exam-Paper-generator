@@ -1,0 +1,16 @@
+[DEFAULT]
+# 邮件服务器配置
+mail_server = smtp.gmail.com
+mail_port = 587
+mail_use_tls = True
+mail_username = your-email@example.com
+mail_password = your-app-password
+mail_default_sender = your-email@example.com
+
+# DeepSeek API配置（从 https://platform.deepseek.com/ 获取密钥）
+deepseek_api_key = your-deepseek-api-key
+deepseek_base_url = https://api.deepseek.com
+deepseek_model = deepseek-chat
+
+# 系统配置
+daily_practice_time = 07:00

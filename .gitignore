@@ -205,3 +205,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# 项目运行时数据与敏感配置（请勿提交真实密钥与用户数据）
+config.ini
+students.db
+log.txt

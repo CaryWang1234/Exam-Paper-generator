@@ -1,3 +1,0 @@
-每日练习发送任务已启动，发送时间：07:00
- * Serving Flask app 'app'
- * Debug mode: off

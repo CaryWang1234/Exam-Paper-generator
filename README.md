@@ -17,18 +17,19 @@
 ### 📤 多格式导出
 - **DOCX格式**：可直接用于打印和编辑的Word文档
 - **HTML格式**：便于在线浏览和分享的网页格式
-- **PDF格式**：便于分发和存档的便携式文档格式
+- **PDF格式**：基于 xhtml2pdf 真实生成，自动注册系统中文字体，便于分发和存档
 
 ### 👨‍🎓 学生个性化练习
 - **定制化服务**：根据学生年级、科目、知识范围和学习目标定制练习题
-- **定时推送**：支持每日定时向订阅学生发送个性化练习题
+- **定时推送**：按每位学生自选的偏好时间分别推送每日练习题
 - **详细反馈**：每道题都配有详细解析和学习建议
 - **灵活订阅**：学生可随时订阅或取消练习服务
 
 ### ⚙️ 系统管理
-- **可视化配置**：友好的Web界面配置邮件服务和API密钥
+- **可视化配置**：友好的Web界面配置邮件服务和API密钥（仅限本机访问）
 - **多邮箱支持**：支持Gmail、QQ邮箱、163邮箱等多种邮件服务商
-- **定时任务**：可自定义每日练习发送时间
+- **定时任务**：可自定义每日练习默认发送时间
+- **日志记录**：运行日志统一输出到控制台与 log.txt
 
 ## 🚀 快速开始
 
@@ -61,9 +62,19 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. 配置环境变量
+4. 配置密钥与参数
+
+方式一（推荐）：复制配置文件模板并填写
 ```bash
-# 复制配置文件模板
+# Windows
+Copy-Item config.ini.example config.ini
+
+# macOS/Linux
+cp config.ini.example config.ini
+```
+
+方式二：通过 `.env` 文件设置 DeepSeek API 密钥（优先级高于 config.ini）
+```bash
 cp .env.example .env
 ```
 
@@ -71,6 +82,8 @@ cp .env.example .env
 ```env
 DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
+
+> 注意：config.ini、students.db、log.txt 包含敏感信息或运行时数据，已被 .gitignore 排除，请勿提交到仓库。
 
 5. 初始化数据库
 ```bash
@@ -90,7 +103,7 @@ python run.py
 
 ### 生成试卷
 
-1. 在首页选择或输入资料（支持 TXT、MD 格式）
+1. 在首页选择或输入资料（支持 TXT、MD、DOCX 格式）
 2. 配置试卷参数：
    - 选择试卷类型（小练、考试、模拟考、期中期末等）
    - 设置难度级别（简单、中等、困难、竞赛级）
@@ -117,7 +130,7 @@ python run.py
 
 ### 系统配置
 
-1. 点击首页 "系统配置" 进入管理页面
+1. 点击首页 "系统配置" 进入管理页面（出于安全考虑，该页面仅限本机访问）
 2. 配置邮件服务器：
    - 填写邮件服务器地址和端口
    - 输入邮箱用户名和密码/应用密码
@@ -131,12 +144,12 @@ python run.py
 
 ### 后端技术栈
 - **核心框架**：Flask
-- **AI接口**：DeepSeek API (deepseek-chat模型)
-- **文档处理**：python-docx (DOCX生成)、markdown (Markdown解析)
+- **AI接口**：DeepSeek API（默认 deepseek-chat 模型，可在 config.ini 中配置）
+- **文档处理**：python-docx (DOCX生成)、markdown (Markdown解析)、xhtml2pdf (PDF生成)
 - **数据库**：SQLite3 (轻量级数据库存储)
 - **邮件服务**：Flask-Mail
-- **任务调度**：APScheduler (定时任务)
-- **配置管理**：configparser
+- **任务调度**：APScheduler (定时任务，按学生偏好时间分时段推送)
+- **配置管理**：configparser + python-dotenv
 
 ### 前端技术栈
 - **模板引擎**：Jinja2 (Flask内置)
@@ -169,13 +182,13 @@ plainText
 
 ## ⚠️ 注意事项
 
-1. **API密钥**：需从 [DeepSeek官网](https://platform.deepseek.com/) 获取API密钥
+1. **API密钥**：需从 [DeepSeek官网](https://platform.deepseek.com/) 获取API密钥；未配置时应用仍可启动，生成功能会给出友好提示
 2. **邮件服务**：确保所使用的邮箱已开启SMTP服务
 3. **编码问题**：系统已优化UTF-8编码支持，确保中文正常显示
-4. **配置生效**：修改系统配置后需重启应用才能完全生效
+4. **配置生效**：修改邮件配置后需重启应用才能生效，API密钥保存后立即生效
 5. **安全性**：
-   - 不要在代码中硬编码敏感信息
-   - 定期更换API密钥和邮箱密码
+   - 不要在代码中硬编码敏感信息，config.ini 与 .env 均不应提交到版本库
+   - 定期更换API密钥和邮箱密码；若密钥曾意外泄露，请立即到平台吊销并重新生成
    - 生产环境中应使用HTTPS协议
 
 ## 🤝 贡献指南
